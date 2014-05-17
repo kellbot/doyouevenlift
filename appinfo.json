@@ -1,0 +1,18 @@
+{
+    "capabilities": [
+        ""
+    ],
+    "appKeys": {},
+    "resources": {
+        "media": []
+    },
+    "shortName": "Tutorial 1",
+    "longName": "Tutorial 1",
+    "versionCode": 1,
+    "companyName": "kelly@kellbot.com",
+    "versionLabel": "1.0",
+    "uuid": "7c3f198f-9593-4292-87c6-2c2763eade6e",
+    "watchapp": {
+        "watchface": false
+    }
+}
