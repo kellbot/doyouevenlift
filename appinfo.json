@@ -18,21 +18,6 @@
                 "type": "png-trans",
                 "name": "SET_LABEL",
                 "file": "images/SetBG-labeled.png"
-            },
-            {
-                "type": "png-trans",
-                "name": "SETBW",
-                "file": "images/SetsWeightBG-bw.png"
-            },
-            {
-                "type": "png-trans",
-                "name": "SETW",
-                "file": "images/SetsWeightBG-w.png"
-            },
-            {
-                "type": "png-trans",
-                "name": "SET_BACKGROUND",
-                "file": "images/SetsWeightBG.png"
             }
         ]
     }

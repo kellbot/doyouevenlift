@@ -1,11 +1,10 @@
 #include <pebble.h>
 
 Window *window;
-TextLayer *title_text, *reps_layer, *weight_layer;
+TextLayer *title_text, *reps_layer, *weight_layer, *count_layer;
+InverterLayer *count_inv;
 GBitmap *set_bg_bitmap;
 BitmapLayer *set_bg_layer;
-
-char buffer[] = "00:00";
 typedef struct {
   const char *activity;
   unsigned int reps;
@@ -43,6 +42,7 @@ void update_exercise(Set current_set){
     text_layer_set_text(title_text, current_set.activity);
     text_layer_set_text(reps_layer, itoc(current_set.reps));
     text_layer_set_text(weight_layer, itoc(current_set.weight));
+    text_layer_set_text(count_layer, itoc(exercise));
 
 }
 
@@ -110,6 +110,16 @@ void window_load(Window *window)
   text_layer_set_font(weight_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   layer_add_child(window_get_root_layer(window), (Layer*) weight_layer);
 
+  //exercise count
+  count_layer = text_layer_create(GRect(0, 129, 144, 20));
+  text_layer_set_background_color(count_layer, GColorClear);
+  text_layer_set_text_color(count_layer, GColorBlack);
+  text_layer_set_text_alignment(count_layer, GTextAlignmentCenter);
+  text_layer_set_font(count_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
+  layer_add_child(window_get_root_layer(window), (Layer*) count_layer);
+  
+  count_inv = inverter_layer_create(GRect(0, 133, 144, 20));
+  layer_add_child(window_get_root_layer(window), (Layer*) count_inv);
 }
 
 void window_unload(Window *window)
@@ -133,6 +143,7 @@ void init()
 
 void deinit()
 {
+  inverter_layer_destroy(count_inv);
   gbitmap_destroy(set_bg_bitmap);
   bitmap_layer_destroy(set_bg_layer);
   text_layer_destroy(weight_layer);
