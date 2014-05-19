@@ -76,36 +76,37 @@ void click_config_provider(void *context)
 void window_load(Window *window)
 {
   //activity name
-  title_text = text_layer_create(GRect(2, 20, 130, 60));
+  title_text = text_layer_create(GRect(0, 0, 144, 60));
   text_layer_set_background_color(title_text, GColorClear);
   text_layer_set_text_color(title_text, GColorBlack);
   text_layer_set_text_alignment(title_text, GTextAlignmentCenter);
   text_layer_set_font(title_text, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
   layer_add_child(window_get_root_layer(window), (Layer*) title_text);
 
+   //labels for sets and reps
+  set_bg_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SET_LABEL_WHITE);
+ 
+  set_bg_layer = bitmap_layer_create(GRect(0, 67, 144, 66));
+  bitmap_layer_set_bitmap(set_bg_layer, set_bg_bitmap);
+  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(set_bg_layer));
+
+  
   //reps count
-  reps_layer = text_layer_create(GRect(15,80, 65, 100));
+  reps_layer = text_layer_create(GRect(12,65, 54, 54));
   text_layer_set_background_color(reps_layer, GColorClear);
   text_layer_set_text_color(reps_layer, GColorBlack);
-  text_layer_set_text_alignment(reps_layer, GTextAlignmentLeft);
+  text_layer_set_text_alignment(reps_layer, GTextAlignmentCenter);
   text_layer_set_font(reps_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   layer_add_child(window_get_root_layer(window), (Layer*) reps_layer);
 
   //weight
-  weight_layer = text_layer_create(GRect(70,80, 110, 100));
+  weight_layer = text_layer_create(GRect(78,65, 54, 54));
   text_layer_set_background_color(weight_layer, GColorClear);
   text_layer_set_text_color(weight_layer, GColorBlack);
-  text_layer_set_text_alignment(weight_layer, GTextAlignmentLeft);
+  text_layer_set_text_alignment(weight_layer, GTextAlignmentCenter);
   text_layer_set_font(weight_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   layer_add_child(window_get_root_layer(window), (Layer*) weight_layer);
 
-  
-  //labels for sets and reps
-  set_bg_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SET_BACKGROUND);
- 
-  set_bg_layer = bitmap_layer_create(GRect(0, 70, 144, 136));
-  bitmap_layer_set_bitmap(set_bg_layer, set_bg_bitmap);
-  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(set_bg_layer));
 }
 
 void window_unload(Window *window)
