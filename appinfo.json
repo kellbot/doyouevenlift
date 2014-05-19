@@ -15,7 +15,7 @@
     "resources": {
         "media": [
             {
-                "type": "png",
+                "type": "png-trans",
                 "name": "SET_BACKGROUND",
                 "file": "images/SetsWeightBG.png"
             }
