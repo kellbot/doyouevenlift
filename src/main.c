@@ -32,14 +32,17 @@ Set sets[] = {
 
 unsigned int exercise = 0;
 
+static char* itoc(int i)
+{
+  static char newc[20];
+  snprintf(newc, 20, "%d", i);
+  return newc;
+}
+
 void update_exercise(Set current_set){
     text_layer_set_text(title_text, current_set.activity);
-    static char reps[20];
-    snprintf(reps, 20, "%d", current_set.reps);
-    text_layer_set_text(reps_layer, reps);
-    static char weight[20];
-    snprintf(weight, 20, "%d", current_set.weight);
-    text_layer_set_text(weight_layer, weight);
+    text_layer_set_text(reps_layer, itoc(current_set.reps));
+    text_layer_set_text(weight_layer, itoc(current_set.weight));
 
 }
 
