@@ -1,8 +1,10 @@
 #include <pebble.h>
 
 Window *window;
-TextLayer *text_layer;
-TextLayer *sets_layer;
+TextLayer *title_text, *reps_layer, *weight_layer;
+GBitmap *set_bg_bitmap;
+BitmapLayer *set_bg_layer;
+
 char buffer[] = "00:00";
 typedef struct {
   const char *activity;
@@ -31,10 +33,14 @@ Set sets[] = {
 unsigned int exercise = 0;
 
 void update_exercise(Set current_set){
-    text_layer_set_text(text_layer, current_set.activity);
-    char reps_str[50];
-    snprintf(reps_str, 50 , "%d", 10);
-    text_layer_set_text(sets_layer, reps_str);
+    text_layer_set_text(title_text, current_set.activity);
+    static char reps[20];
+    snprintf(reps, 20, "%d", current_set.reps);
+    text_layer_set_text(reps_layer, reps);
+    static char weight[20];
+    snprintf(weight, 20, "%d", current_set.weight);
+    text_layer_set_text(weight_layer, weight);
+
 }
 
 void up_click_handler(ClickRecognizerRef recognizer, void *context)
@@ -57,7 +63,7 @@ void down_click_handler(ClickRecognizerRef recognizer, void *context)
  
 void select_click_handler(ClickRecognizerRef recognizer, void *context)
 {
- text_layer_set_text(text_layer, "That doesn't do anything.");
+ text_layer_set_text(title_text, "That doesn't do anything.");
 }
 
 void click_config_provider(void *context)
@@ -70,21 +76,36 @@ void click_config_provider(void *context)
 void window_load(Window *window)
 {
   //activity name
-  text_layer = text_layer_create(GRect(0, 0, 132, 84));
-  text_layer_set_background_color(text_layer, GColorClear);
-  text_layer_set_text_color(text_layer, GColorBlack);
-  text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
-  text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
-  layer_add_child(window_get_root_layer(window), (Layer*) text_layer);
+  title_text = text_layer_create(GRect(2, 20, 130, 60));
+  text_layer_set_background_color(title_text, GColorClear);
+  text_layer_set_text_color(title_text, GColorBlack);
+  text_layer_set_text_alignment(title_text, GTextAlignmentCenter);
+  text_layer_set_font(title_text, fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+  layer_add_child(window_get_root_layer(window), (Layer*) title_text);
 
-  sets_layer = text_layer_create(GRect(0,84, 132, 168));
-  text_layer_set_background_color(sets_layer, GColorClear);
-  text_layer_set_text_color(sets_layer, GColorBlack);
-  text_layer_set_text_alignment(sets_layer, GTextAlignmentLeft);
-  text_layer_set_font(sets_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
-  layer_add_child(window_get_root_layer(window), (Layer*) sets_layer);
+  //reps count
+  reps_layer = text_layer_create(GRect(15,80, 65, 100));
+  text_layer_set_background_color(reps_layer, GColorClear);
+  text_layer_set_text_color(reps_layer, GColorBlack);
+  text_layer_set_text_alignment(reps_layer, GTextAlignmentLeft);
+  text_layer_set_font(reps_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  layer_add_child(window_get_root_layer(window), (Layer*) reps_layer);
+
+  //weight
+  weight_layer = text_layer_create(GRect(70,80, 110, 100));
+  text_layer_set_background_color(weight_layer, GColorClear);
+  text_layer_set_text_color(weight_layer, GColorBlack);
+  text_layer_set_text_alignment(weight_layer, GTextAlignmentLeft);
+  text_layer_set_font(weight_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  layer_add_child(window_get_root_layer(window), (Layer*) weight_layer);
+
   
-  text_layer_set_text(text_layer, "Press A Button");
+  //labels for sets and reps
+  set_bg_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SET_BACKGROUND);
+ 
+  set_bg_layer = bitmap_layer_create(GRect(0, 70, 144, 136));
+  bitmap_layer_set_bitmap(set_bg_layer, set_bg_bitmap);
+  layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(set_bg_layer));
 }
 
 void window_unload(Window *window)
@@ -108,8 +129,11 @@ void init()
 
 void deinit()
 {
-  text_layer_destroy(sets_layer);
-  text_layer_destroy(text_layer);
+  gbitmap_destroy(set_bg_bitmap);
+  bitmap_layer_destroy(set_bg_layer);
+  text_layer_destroy(weight_layer);
+  text_layer_destroy(reps_layer);
+  text_layer_destroy(title_text);
   window_destroy(window);
 }
   
