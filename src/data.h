@@ -11,10 +11,10 @@ typedef struct {
   Set completed_sets[20];
 } Activity;
 
-typedef struct {
+typedef struct Routine {
   char *name;
   unsigned int number_of_sets;
-  Set target_sets[20];
-} Routine;
+  Set target_sets[50];
+} __attribute__((__packed__)) Routine;
 
 extern Routine test_routine;

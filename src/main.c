@@ -15,6 +15,7 @@ BitmapLayer *set_bg_layer;
 
 Routine *current_routine;
 Routine stored_routine;
+Routine fetched_routine;
 
 unsigned int exercise = 0;
 unsigned int set_count = 16;
@@ -30,7 +31,7 @@ void update_exercise(Set current_set){
     snprintf(nweight, sizeof(nweight), "%d", current_set.weight);
     text_layer_set_text(weight_layer,  nweight);
     static char nexercise[20];
-    snprintf(nexercise, sizeof(nexercise), "Set %d of %d", exercise +1, set_count);  
+    snprintf(nexercise, sizeof(nexercise), "Set %d of %d", exercise +1, current_routine->number_of_sets);  
     text_layer_set_text(count_layer, nexercise);
 
 }
@@ -195,7 +196,7 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
         menu_cell_basic_draw(ctx, cell_layer, "Sync Saved Data", "TODO saved workouts", NULL);
         break;
     case 2:
-        menu_cell_basic_draw(ctx, cell_layer, "Reset Data", "Clear saved workouts", NULL);
+        menu_cell_basic_draw(ctx, cell_layer, "Clear Data", "Clear saved workouts", NULL);
         break;
     }
 }
@@ -205,6 +206,56 @@ uint16_t num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *
  return 3;
 }
  
+char * mystrtok(s, delim)
+	register char *s;
+	register const char *delim;
+{
+	register char *spanp;
+	register int c, sc;
+	char *tok;
+	static char *last;
+
+
+	if (s == NULL && (s = last) == NULL)
+		return (NULL);
+
+	/*
+	 * Skip (span) leading delimiters (s += strspn(s, delim), sort of).
+	 */
+cont:
+	c = *s++;
+	for (spanp = (char *)delim; (sc = *spanp++) != 0;) {
+		if (c == sc)
+			goto cont;
+	}
+
+	if (c == 0) {		/* no non-delimiter characters */
+		last = NULL;
+		return (NULL);
+	}
+	tok = s - 1;
+
+	/*
+	 * Scan token (scan for delimiters: s += strcspn(s, delim), sort of).
+	 * Note that delim must have one NUL; we stop if we see that, too.
+	 */
+	for (;;) {
+		c = *s++;
+		spanp = (char *)delim;
+		do {
+			if ((sc = *spanp++) == c) {
+				if (c == 0)
+					s = NULL;
+				else
+					s[-1] = 0;
+				last = s;
+				return (tok);
+			}
+		} while (sc != 0);
+	}
+	/* NOTREACHED */
+}
+
 //fetches the current routine. Looks in persistent memory, then queries the phone if it can't find it
 void get_active_routine(){
   //check in persistent memory
@@ -224,6 +275,30 @@ void load_workout(){
   window_stack_push(window, true);
 }
 
+void fetch_workout(){
+      char *str = "1500Vertical Crunches,3000Side Oblique,3000Side Oblique,250090 Crunches,2500Bicycles,2000LegLifts,1225Torso Twists,6000Planks,\
+6000Planks,4515Bench Press,4515Bench Press,4515Bench Press,1015DB Incline Press,1215DB Incline Press,\
+1515DB Incline Press,0815DB Fly,0815DB Fly,0815DB Fly,0515Lateral Raise,0515Lateral Raise,0515Lateral Raise,0815Front Raise,0815Front Raise,\
+0815Front Raise,2415Upright Rows,2415Upright Rows,2415Upright Rows,1615Skull Crushers,1615Skull Crushers,1615Skull Crushers,1015Overhead Ext,2015Pushdowns x3";
+  int i = 0;
+  for (char *tok = mystrtok(str, ","); tok && *tok; tok = mystrtok(NULL, ","))  {
+    char freps[2];
+    char fweight[2];
+    char fname[20];
+    
+    strncpy(fweight, tok+2, 2);
+    strncpy(freps, tok, 2);
+    strncpy(fname, tok+4, 20);
+    Set fetched_set = {.weight = atoi(fweight), .reps = atoi(freps), .activity = fname};
+    fetched_routine.target_sets[i] = fetched_set;
+   // APP_LOG(APP_LOG_LEVEL_DEBUG, " %d reps of %s at %d pounds", fetched_routine.target_sets[i].weight, fetched_routine.target_sets[i].activity, fetched_routine.target_sets[i].reps);
+   i++;
+  }
+  fetched_routine.name = "Remote Workout";
+  fetched_routine.number_of_sets = i +1;
+  current_routine = &fetched_routine;
+}
+
 void select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context)
 {
   //Get which row
@@ -231,11 +306,12 @@ void select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *c
     case 0:
       load_workout();
       break;
-    case 1:
-      //TODO
+    case 1: 
+      fetch_workout();
       break;
     case 2:
       persist_delete(ROUTINE_KEY);
+      current_routine = &test_routine;
       break;
   }
 
@@ -263,9 +339,14 @@ void menu_unload(Window *menu_window){
   menu_layer_destroy(menu_layer);
 }
 
+void in_received_handler(){
+}
 
 void init()
 {
+
+  app_message_register_inbox_received(in_received_handler); 
+  app_message_open(512, 512);
   
   //Window initialization
   window = window_create();
