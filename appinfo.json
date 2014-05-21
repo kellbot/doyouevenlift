@@ -15,7 +15,7 @@
     },
     "versionCode": 1,
     "shortName": "Do You Even Lift",
-    "longName": "Tutorial 1",
+    "longName": "Weight Lifting Logger",
     "watchapp": {
         "watchface": false
     },
