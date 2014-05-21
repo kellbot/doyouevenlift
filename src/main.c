@@ -1,5 +1,7 @@
 #include <pebble.h>
 #include <data.h>
+#define ROUTINE_KEY 9
+  
   
 Window *window;
 Window *menu_window;
@@ -11,9 +13,8 @@ InverterLayer *count_inv, *reps_inv, *weight_inv;
 GBitmap *set_bg_bitmap;
 BitmapLayer *set_bg_layer;
 
-Set *sets;
-Set saved_sets[25];
-Workout workouts[3];
+Routine *current_routine;
+Routine stored_routine;
 
 unsigned int exercise = 0;
 unsigned int set_count = 16;
@@ -37,41 +38,41 @@ void update_exercise(Set current_set){
 void up_click_handler(ClickRecognizerRef recognizer, void *context)
 {
   if (edit_mode == 1) {
-    sets[exercise].reps = sets[exercise].reps + 1;
+    current_routine->target_sets[exercise].reps = current_routine->target_sets[exercise].reps + 1;
     static char dreps[20];
-    snprintf(dreps, sizeof(dreps), "%d", sets[exercise].reps);
+    snprintf(dreps, sizeof(dreps), "%d", current_routine->target_sets[exercise].reps);
     text_layer_set_text(reps_layer, dreps);
   }  else if (edit_mode == 2) {
-    sets[exercise].weight = sets[exercise].weight + 1;
+    current_routine->target_sets[exercise].weight = current_routine->target_sets[exercise].weight + 1;
     static char dweight[20];
-    snprintf(dweight, sizeof(dweight), "%d", sets[exercise].weight);
+    snprintf(dweight, sizeof(dweight), "%d", current_routine->target_sets[exercise].weight);
     text_layer_set_text(weight_layer, dweight);    
   } else {
 
     //do nothing if we're on the first exercise
     if (exercise < 1) return;
     exercise = exercise - 1;
-    update_exercise(sets[exercise]);
+    update_exercise(current_routine->target_sets[exercise]);
   }
 }
  
 void down_click_handler(ClickRecognizerRef recognizer, void *context)
 {
   if (edit_mode == 1) {
-    sets[exercise].reps = sets[exercise].reps - 1;
+    current_routine->target_sets[exercise].reps = current_routine->target_sets[exercise].reps - 1;
     static char dreps[20];
-    snprintf(dreps, sizeof(dreps), "%d", sets[exercise].reps);
+    snprintf(dreps, sizeof(dreps), "%d", current_routine->target_sets[exercise].reps);
     text_layer_set_text(reps_layer, dreps);
   } else if (edit_mode == 2) {
-    sets[exercise].weight = sets[exercise].weight - 1;
+    current_routine->target_sets[exercise].weight = current_routine->target_sets[exercise].weight - 1;
     static char dweight[20];
-    snprintf(dweight, sizeof(dweight), "%d", sets[exercise].weight);
+    snprintf(dweight, sizeof(dweight), "%d", current_routine->target_sets[exercise].weight);
     text_layer_set_text(weight_layer, dweight);    
   } else { //go to next exercise
     //do nothing if we're on the last exercise
-    if (exercise >= set_count - 1) return;
+    if (exercise >= current_routine->number_of_sets -1) return;
     exercise = exercise + 1;
-    update_exercise(sets[exercise]);
+    update_exercise(current_routine->target_sets[exercise]);
   }
 }
  
@@ -155,7 +156,7 @@ void window_load(Window *window)
   reps_inv = inverter_layer_create(GRect(12, 76, 54, 34));
   weight_inv = inverter_layer_create(GRect(78, 76, 54, 34));
   
-  update_exercise(sets[0]);
+  update_exercise(current_routine->target_sets[0]);
 
 }
 
@@ -164,11 +165,13 @@ void window_unload(Window *window)
   //exit edit mode
   edit_mode = 0;
   
-   persist_write_int(COUNT_KEY, set_count); 
-   persist_write_data(SETS_DATA_KEY, sets, sizeof(sets[0])*set_count);
-   persist_write_int(LENGTH_KEY, sizeof(sets[0])*set_count);
-   APP_LOG(APP_LOG_LEVEL_DEBUG, "Just wrote %d sets of length %d starting with %d %s", set_count, sizeof(sets[0]) * set_count, sets[0].reps, sets[0].activity);
+  //save the current routine.
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Writing routine %d bytes long.", 512);
+  int wrote = persist_write_data(ROUTINE_KEY, current_routine, 512);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote %d bytes.", wrote);
 
+  
+  //free up the ram
   inverter_layer_destroy(reps_inv);
   inverter_layer_destroy(weight_inv);
   inverter_layer_destroy(count_inv);
@@ -186,15 +189,12 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
     switch(cell_index->row)
     {
     case 0:
-        menu_cell_basic_draw(ctx, cell_layer, "Workout 1", "Back / Bis / Tris", NULL);
+        menu_cell_basic_draw(ctx, cell_layer, "Start Workout", current_routine->name, NULL);
         break;
     case 1:
-        menu_cell_basic_draw(ctx, cell_layer, "Workout 2", "Legs, etc", NULL);
+        menu_cell_basic_draw(ctx, cell_layer, "Sync Saved Data", "TODO saved workouts", NULL);
         break;
     case 2:
-        menu_cell_basic_draw(ctx, cell_layer, "Workout 3", "Bodyweight bonus day", NULL);
-        break;
-    case 3:
         menu_cell_basic_draw(ctx, cell_layer, "Reset Data", "Clear saved workouts", NULL);
         break;
     }
@@ -202,30 +202,25 @@ void draw_row_callback(GContext *ctx, Layer *cell_layer, MenuIndex *cell_index, 
  
 uint16_t num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *callback_context)
 {
- return 4;
+ return 3;
 }
  
-/*void load_set(){
-  if(persist_exists(LENGTH_KEY) && persist_exists(COUNT_KEY) && persist_exists(SET_DATA_KEY){
-    int last_seen_sets = persist_read_int(COUNT_KEY);
-    int last_seen_length = persist_read_int(LENGTH_KEY);
-    persist_read_data(SETS_DATA_KEY, &saved_sets, last_seen_length);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Last saw %d sets of length %d starting with %d %s.", last_seen_sets, last_seen_length, saved_sets[0].reps, saved_sets[0].activity);
-  
-   sets = saved_sets;
-   set_count = last_seen_sets;
-  
+//fetches the current routine. Looks in persistent memory, then queries the phone if it can't find it
+void get_active_routine(){
+  //check in persistent memory
+  if(persist_exists(ROUTINE_KEY)){
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Found a routine of size %d.",  persist_get_size(ROUTINE_KEY));
+    persist_read_data(ROUTINE_KEY, &stored_routine, persist_get_size(ROUTINE_KEY));
+    current_routine = &stored_routine;
   } else {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "No sets found");   
-      sets = default_sets;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Using default routine.");
+    //TODO get app message, for now a default
+    current_routine = &test_routine;
   }
+}
 
-}*/
-
-void load_workout(int i){
-  sets = workouts[i].sets;
-  set_count = workouts[i].number_of_sets;
-  exercise = 0;
+void load_workout(){
+ // get_active_routine();
   window_stack_push(window, true);
 }
 
@@ -234,15 +229,13 @@ void select_click_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *c
   //Get which row
   switch(cell_index->row){
     case 0:
-    case 1:
-    case 2:
-      load_workout(cell_index->row);
+      load_workout();
       break;
-    case 3:
-      persist_delete(SETS_DATA_KEY);
-      persist_delete(LENGTH_KEY);
-      persist_delete(COUNT_KEY);
-      sets = workout_1.sets;
+    case 1:
+      //TODO
+      break;
+    case 2:
+      persist_delete(ROUTINE_KEY);
       break;
   }
 
@@ -270,12 +263,10 @@ void menu_unload(Window *menu_window){
   menu_layer_destroy(menu_layer);
 }
 
+
 void init()
 {
-  workouts[0] = workout_1;
-  workouts[1] = workout_2;
-  workouts[2] = workout_3;
-
+  
   //Window initialization
   window = window_create();
   window_set_window_handlers(window, (WindowHandlers) {
@@ -290,6 +281,9 @@ void init()
   });
   
   window_set_click_config_provider(window, click_config_provider);
+  
+  get_active_routine();
+  
   window_stack_push(menu_window, true);
 }
 
