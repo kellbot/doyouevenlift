@@ -1,7 +1,8 @@
 #include <pebble.h>
 #include <data.h>
 #define ROUTINE_KEY 9
-#define ACTIVITY_STRING_KEY 8  
+#define ACTIVITY_STRINGS_KEY 8  
+#define ACTIVITY_LENGTH_KEY 81
   
 Window *window;
 Window *menu_window;
@@ -167,17 +168,20 @@ void window_unload(Window *window)
   edit_mode = 0;
   
   //save the current routine.
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Writing routine %d bytes long.", 512);
-  
-  char *activity_strings = malloc(256);
+ 
+  char activity_strings[256];
   int len = 0;
   for(unsigned int i = 0; i < current_routine->number_of_sets; i++){
     int actlen = strlen(current_routine->target_sets[i].activity);
+    //quit if it's too long
+    if(len + actlen > 256) break;
     memcpy(&activity_strings[len], current_routine->target_sets[i].activity, actlen);
+    memcpy(&activity_strings[len+actlen], ",", 1);
     len = len + actlen + 1;
   }
+  persist_write_int(ACTIVITY_LENGTH_KEY, len);
   
-  int wrote = persist_write_data(ACTIVITY_STRING_KEY, &activity_strings,256);
+  int wrote = persist_write_data(ACTIVITY_STRINGS_KEY, activity_strings,len);
   persist_write_data(ROUTINE_KEY, current_routine, 512);
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote %s.", activity_strings);
 
@@ -271,6 +275,13 @@ cont:
 //fetches the current routine. Looks in persistent memory, then queries the phone if it can't find it
 void get_active_routine(){
   //check in persistent memory
+  if(persist_exists(ACTIVITY_STRINGS_KEY)){
+    char *stored_strings = malloc( persist_get_size(ACTIVITY_STRINGS_KEY));
+    persist_read_string(ACTIVITY_STRINGS_KEY, stored_strings, persist_get_size(ACTIVITY_STRINGS_KEY));
+    for (char *astr = mystrtok(stored_strings, ","); astr && *astr; astr = mystrtok(NULL, ","))  {
+       APP_LOG(APP_LOG_LEVEL_DEBUG, "Found string %s", astr);
+    }
+  }
   if(persist_exists(ROUTINE_KEY)){
     APP_LOG(APP_LOG_LEVEL_DEBUG, "Found a routine of size %d.",  persist_get_size(ROUTINE_KEY));
     persist_read_data(ROUTINE_KEY, &stored_routine, persist_get_size(ROUTINE_KEY));

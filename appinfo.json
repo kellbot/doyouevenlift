@@ -1,24 +1,24 @@
 {
-    "versionLabel": "1.0",
-    "capabilities": [
-        ""
-    ],
-    "shortName": "Do You Even Lift",
-    "longName": "Weight Lifting Logger",
-    "versionCode": 1,
-    "uuid": "7c3f198f-9593-4292-87c6-2c2763eade6e",
     "resources": {
         "media": [
             {
+                "name": "SET_LABEL",
                 "type": "png-trans",
-                "file": "images/SetBG-labeled.png",
-                "name": "SET_LABEL"
+                "file": "images/SetBG-labeled.png"
             }
         ]
     },
+    "companyName": "kelly@kellbot.com",
+    "shortName": "Do You Even Lift",
+    "uuid": "7c3f198f-9593-4292-87c6-2c2763eade6e",
+    "versionCode": 1,
+    "capabilities": [
+        ""
+    ],
+    "longName": "Weight Lifting Logger",
     "watchapp": {
         "watchface": false
     },
     "appKeys": {},
-    "companyName": "kelly@kellbot.com"
+    "versionLabel": "1.0"
 }
