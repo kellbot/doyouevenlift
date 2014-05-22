@@ -1,5 +1,5 @@
 typedef struct {
-  const char *activity;
+  char *activity;
   unsigned int reps;
   unsigned int weight;
   unsigned int cooldown;

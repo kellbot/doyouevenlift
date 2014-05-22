@@ -280,16 +280,20 @@ void fetch_workout(){
 6000Planks,4515Bench Press,4515Front Raise,4515DB Incline Press";
   int i = 0;
   for (char *tok = mystrtok(str, ","); tok && *tok; tok = mystrtok(NULL, ","))  {
-    char *freps = tok;
-    char *fweight = &tok[2];
+    char freps[2];
+    char fweight[2];;
     char *fname = &tok[4];
-//    char *pfname = fname;
-  
-//    strncpy(fname, tok+4, sizeof(tok) / sizeof(tok[0]) - 4);
- //   strncpy(fweight, tok+2, 2);
-  //  strncpy(freps, tok, 2);
+    //char tfname[strlen(fname)+1];
+    char *mname = malloc(strlen(fname)+1);
+    //char *pfname = tfname;
     
-    Set fetched_set = {.weight = atoi(fweight), .reps = atoi(freps), .activity = fname};
+    strncpy(freps, tok, 2);
+    strncpy(fweight, tok+2, 2);
+    strncpy(mname, fname, strlen(fname));
+    
+    
+    Set fetched_set = {.weight = atoi(fweight), .reps = atoi(freps), .activity = mname};
+    
     fetched_routine.target_sets[i] = fetched_set;
     APP_LOG(APP_LOG_LEVEL_DEBUG, " %d reps of %s at %d pounds", fetched_routine.target_sets[i].weight, fetched_routine.target_sets[i].activity, fetched_routine.target_sets[i].reps);
    i++;
