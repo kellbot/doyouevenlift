@@ -1,7 +1,7 @@
 #include <pebble.h>
 #include <data.h>
 #define ROUTINE_KEY 9
-  
+#define ACTIVITY_STRING_KEY 8  
   
 Window *window;
 Window *menu_window;
@@ -168,7 +168,19 @@ void window_unload(Window *window)
   
   //save the current routine.
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Writing routine %d bytes long.", 512);
-  int wrote = persist_write_data(ROUTINE_KEY, current_routine, 512);
+  
+  char *activity_strings = malloc(256);
+  int len = 0;
+  for(unsigned int i = 0; i < current_routine->number_of_sets; i++){
+    int actlen = strlen(current_routine->target_sets[i].activity);
+    memcpy(&activity_strings[len], current_routine->target_sets[i].activity, actlen);
+    len = len + actlen + 1;
+  }
+  
+  int wrote = persist_write_data(ACTIVITY_STRING_KEY, &activity_strings,256);
+  persist_write_data(ROUTINE_KEY, current_routine, 512);
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote %s.", activity_strings);
+
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote %d bytes.", wrote);
 
   
@@ -276,23 +288,23 @@ void load_workout(){
 }
 
 void fetch_workout(){
-      char *str = "1500Vertical Crunches,3000Side Oblique,3000Side Oblique,250090 Crunches,2500Bicycles,2000LegLifts,1225Torso Twists,6000Planks,\
-6000Planks,4515Bench Press,4515Front Raise,4515DB Incline Press";
+  char *activity_names[] = {
+    "Vertical Crunches", "Side Oblique", "90 Degree Crunches", "Bicycles", "Leg Lifts","Torso Twists", "Planks", "Bench Press", "Front Raise"
+  };
+    char *str = "150000,300001,250001,250002,250003,200004,122505,600006,\
+600006,451507,451508";
   int i = 0;
   for (char *tok = mystrtok(str, ","); tok && *tok; tok = mystrtok(NULL, ","))  {
     char freps[2];
-    char fweight[2];;
-    char *fname = &tok[4];
-    //char tfname[strlen(fname)+1];
-    char *mname = malloc(strlen(fname)+1);
-    //char *pfname = tfname;
-    
+    char fweight[2];
+    char fname_key[2];
+
     strncpy(freps, tok, 2);
     strncpy(fweight, tok+2, 2);
-    strncpy(mname, fname, strlen(fname));
+    strncpy(fname_key, tok+4, 2);
     
     
-    Set fetched_set = {.weight = atoi(fweight), .reps = atoi(freps), .activity = mname};
+    Set fetched_set = {.weight = atoi(fweight), .reps = atoi(freps), .activity = activity_names[atoi(fname_key)]};
     
     fetched_routine.target_sets[i] = fetched_set;
     APP_LOG(APP_LOG_LEVEL_DEBUG, " %d reps of %s at %d pounds", fetched_routine.target_sets[i].weight, fetched_routine.target_sets[i].activity, fetched_routine.target_sets[i].reps);
