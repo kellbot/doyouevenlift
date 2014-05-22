@@ -277,25 +277,25 @@ void load_workout(){
 
 void fetch_workout(){
       char *str = "1500Vertical Crunches,3000Side Oblique,3000Side Oblique,250090 Crunches,2500Bicycles,2000LegLifts,1225Torso Twists,6000Planks,\
-6000Planks,4515Bench Press,4515Bench Press,4515Bench Press,1015DB Incline Press,1215DB Incline Press,\
-1515DB Incline Press,0815DB Fly,0815DB Fly,0815DB Fly,0515Lateral Raise,0515Lateral Raise,0515Lateral Raise,0815Front Raise,0815Front Raise,\
-0815Front Raise,2415Upright Rows,2415Upright Rows,2415Upright Rows,1615Skull Crushers,1615Skull Crushers,1615Skull Crushers,1015Overhead Ext,2015Pushdowns x3";
+6000Planks,4515Bench Press,4515Front Raise,4515DB Incline Press";
   int i = 0;
   for (char *tok = mystrtok(str, ","); tok && *tok; tok = mystrtok(NULL, ","))  {
-    char freps[2];
-    char fweight[2];
-    char fname[20];
+    char *freps = tok;
+    char *fweight = &tok[2];
+    char *fname = &tok[4];
+//    char *pfname = fname;
+  
+//    strncpy(fname, tok+4, sizeof(tok) / sizeof(tok[0]) - 4);
+ //   strncpy(fweight, tok+2, 2);
+  //  strncpy(freps, tok, 2);
     
-    strncpy(fweight, tok+2, 2);
-    strncpy(freps, tok, 2);
-    strncpy(fname, tok+4, 20);
     Set fetched_set = {.weight = atoi(fweight), .reps = atoi(freps), .activity = fname};
     fetched_routine.target_sets[i] = fetched_set;
-   // APP_LOG(APP_LOG_LEVEL_DEBUG, " %d reps of %s at %d pounds", fetched_routine.target_sets[i].weight, fetched_routine.target_sets[i].activity, fetched_routine.target_sets[i].reps);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, " %d reps of %s at %d pounds", fetched_routine.target_sets[i].weight, fetched_routine.target_sets[i].activity, fetched_routine.target_sets[i].reps);
    i++;
   }
   fetched_routine.name = "Remote Workout";
-  fetched_routine.number_of_sets = i +1;
+  fetched_routine.number_of_sets = i;
   current_routine = &fetched_routine;
 }
 
