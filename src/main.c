@@ -94,8 +94,8 @@ void save_current_routine(){
   persist_write_string(ROUTINE_NAME_KEY, current_routine->name);
   
   //save the routine itself
-  int rwrote = persist_write_data(ROUTINE_DATA_KEY, &current_routine->target_sets, sizeof(current_routine->target_sets));
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote %d of %d bytes of routine", rwrote,  sizeof(current_routine->target_sets));
+  int rwrote = persist_write_data(ROUTINE_DATA_KEY, &current_routine, sizeof(*current_routine));
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Wrote %d of %d bytes of routine", rwrote,  sizeof(*current_routine));
   
 }
 

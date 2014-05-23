@@ -1,7 +1,7 @@
 typedef struct Set {
-  int exercise_key;
-  int reps;
-  int weight;
+  unsigned char exercise_key;
+  unsigned char reps;
+  unsigned char weight;
 }  __attribute__((__packed__)) Set;
 
 typedef struct Routine {
